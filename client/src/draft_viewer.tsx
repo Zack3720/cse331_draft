@@ -5,26 +5,25 @@ import './draft_viewer.css';
 const REFRESH_INT = 2000;
 
 interface draftViewerProps {
-    // will probably need something here
-    drafter: string;
-    draftID: number;
-    turn: string;
-    options: string[];
-    draftedItems: DraftItem[];
-    over: boolean;
+    drafter: string; // The drafter that is viewing the component
+    draftID: number; // ID of current draft
+    turn: string; // The drafter whose turn it is currently 
+    options: string[]; // List of undraft items
+    draftedItems: DraftItem[]; // List of drafted items
+    over: boolean; // Boolean of if the game is over or not
 
-    pickItemCallback: (item: string) => void;
-    refresh: () => void;
-    backCallback: () => void;
+    pickItemCallback: (item: string) => void; // Function to pick an item
+    refresh: () => void; // Function to refresh the draft (get new drafted items and player turn)
+    backCallback: () => void; // Function to go back (change page to landing)
   }
 
 interface draftViewerState {
-  // will probably need something here
-  selectValue: string;
-  timer: NodeJS.Timeout;
+  selectValue: string; // value of the pick item select
+  timer: NodeJS.Timeout; // The current timer for refreshing
+  // (this is used to clear it in the case of the back button)
 }
 
-
+// A component used to view and pick items from a draft.
 export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
 
   constructor(props: any) {
@@ -34,16 +33,19 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
     this.state = {selectValue: '', timer: setTimeout(this.timedRefresh, REFRESH_INT)};
   }
 
+  // Calls the refresh and sets another timer to call it again in REFRESH_INT milliseconds
   timedRefresh = () => {
     this.props.refresh();
     const timer = setTimeout(this.timedRefresh, REFRESH_INT);
     this.setState({timer: timer});
   }
 
+  // Updates the selectValue to what is current shown on the screen
   onSelectChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     this.setState({selectValue: evt.target.value});
   }
 
+  // Picks an item if a value is selected
   onPickItem = (_: MouseEvent<HTMLButtonElement>) => {
     if (this.state.selectValue === '') {
       alert('Pick an item!');
@@ -52,11 +54,13 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
     }
   }
 
+  // onChange function for back to clear timer and call the backCallback
   onBack = () => {
     clearTimeout(this.state.timer);
     this.props.backCallback();
   }
   
+  // Renders draftViewer
   render = (): JSX.Element => {
     const itemsList: JSX.Element[] = []
     this.props.draftedItems.forEach((item, index) => {

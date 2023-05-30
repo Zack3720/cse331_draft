@@ -24,14 +24,16 @@ interface AppState {
    * RI: turn, drafter, draftID, draftedItems, undraftedItems, isOver == undefined if page != 'viewer'
    *     turn, drafter, draftID, draftedItems, undraftedItems, isOver != undefined if page = 'viewer'
    */
-  page: page;
+  page: page; // The page that is currently shown
 
-  turn?: string;
-  drafter?: string;
-  draftID?: number;
-  draftedItems?: DraftItem[];
-  undraftedItems?: string[];
-  isOver?: boolean;
+  // All the following are about the current draft. They will be undefined if there is no current draft
+  // (same as what the RI says)
+  turn?: string; // The drafter whose turn it is currently 
+  drafter?: string; // The drafter that is viewing the app
+  draftID?: number; // ID of current draft
+  draftedItems?: DraftItem[]; // List of drafted items
+  undraftedItems?: string[]; // List of undraft items
+  isOver?: boolean; // Boolean of if the game is over or not
 }
 
 

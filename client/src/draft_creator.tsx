@@ -2,20 +2,19 @@ import React, { ChangeEvent, Component } from "react";
 import './draft_creator.css';
 
 interface draftCreatorProps {
-    // will probably need something here
+    // Function to create a new draft with given fields.
     createCallback: (options: string[], drafters: string[], rounds: number, drafter: string) => void;
-    backCallback: () => void;
+    backCallback: () => void; // Function to go back (change page to landing)
   }
 
 interface draftCreatorState {
-  // will probably need something here
-  optionsValue: string;
-  draftersValue: string;
-  roundValue: number;
-  drafterValue: string;
+  optionsValue: string; // Value of options textarea
+  draftersValue: string; // Value of drafters textarea
+  roundValue: number; // Value of round input
+  drafterValue: string; // Value of drafter input
 }
 
-
+// A component used to create drafts.
 export class DraftCreator extends Component<draftCreatorProps, draftCreatorState> {
 
   constructor(props: any) {
@@ -24,6 +23,7 @@ export class DraftCreator extends Component<draftCreatorProps, draftCreatorState
     this.state = {optionsValue: '', draftersValue: '', roundValue: 0, drafterValue: ''};
   }
 
+  // Updates either optionsValue or draftersValue to current value dependent on which one was changed.
   onTextChange = (evt: ChangeEvent<HTMLTextAreaElement>) => {
     if (evt.target.id === 'options') {
       this.setState({optionsValue: evt.target.value});
@@ -32,6 +32,7 @@ export class DraftCreator extends Component<draftCreatorProps, draftCreatorState
     }
   }
 
+  // Updates either roundValue or drafterValue to current value dependent on which one was changed.
   onInputChange = (evt : ChangeEvent<HTMLInputElement>) => {
     if (evt.target.type === 'number') {
       const num = parseInt(evt.target.value);
@@ -41,6 +42,8 @@ export class DraftCreator extends Component<draftCreatorProps, draftCreatorState
     }
   }
 
+  // Checks preconditions for making a draft and either make a draft or alerts the user to what 
+  // input was invalid.
   buildDraft = () => {
     const optionsArr = this.state.optionsValue.split('\n');
     const draftersArr = this.state.draftersValue.split('\n');
@@ -68,6 +71,7 @@ export class DraftCreator extends Component<draftCreatorProps, draftCreatorState
 
   }
 
+  // Renders DraftCreator
   render = (): JSX.Element => {
     return <div>
       <h1><b>Create Draft</b></h1>
@@ -96,6 +100,11 @@ export class DraftCreator extends Component<draftCreatorProps, draftCreatorState
 
 }
 
+/**
+ * Determines if an array contains duplicate values.
+ * @param arr array of type T to check for duplicates
+ * @returns true if arr has not duplicates else returns false
+ */
 function noDuplicates<T>(arr: T[]): boolean {
   return arr.length === new Set(arr).size;
 }

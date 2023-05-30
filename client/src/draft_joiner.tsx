@@ -2,18 +2,16 @@ import React, { ChangeEvent, Component } from "react";
 import './draft_creator.css';
 
 interface draftJoinerProps {
-    // will probably need something here
-    joinCallback: (drafter: string, id: number) => void;
-    backCallback: () => void;
+    joinCallback: (drafter: string, id: number) => void; // Function to join/view a draft
+    backCallback: () => void; // Function to go back (change page to landing)
   }
 
 interface draftJoinerState {
-  // will probably need something here
-  drafterValue: string;
-  IDValue: number;
+  drafterValue: string; // Value of drafter input
+  IDValue: number; // Value of ID input
 }
 
-
+// Component used to join drafts.
 export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
 
   constructor(props: any) {
@@ -22,6 +20,7 @@ export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
     this.state = {drafterValue:'', IDValue:0};
   }
 
+  // Updates either IDValue or drafterValue to current value dependent on which one was changed.
   onInputChange = (evt : ChangeEvent<HTMLInputElement>) => {
     if (evt.target.type === 'number') {
       const num = parseInt(evt.target.value);
@@ -31,6 +30,8 @@ export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
     }
   }
 
+  // Checks to make sure fields are not empty and then tries to join the draft.
+  // (The fetch request will determine if the draft exists)
   joinDraft = () => {
     if (this.state.drafterValue === '') {
       alert('Drafter field cannot be empty');
@@ -39,6 +40,7 @@ export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
     }
   }
   
+  // Renders the DraftJoiner
   render = (): JSX.Element => {
     return <div>
       <h1>Join Draft</h1>
