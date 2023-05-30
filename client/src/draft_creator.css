@@ -1,0 +1,31 @@
+textarea {
+    width: 175px;
+    height: 300px;
+    margin-right: 10px;
+}
+
+.inputs {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.inline {
+    display: inline-block;
+}
+
+.round {
+    width: 40px;
+}
+
+p {
+    margin: 2px;
+}
+
+h2 {
+    margin: 0px;
+}
+
+/* .boarded {
+    border-style: dashed;
+    border-color: red;
+} */

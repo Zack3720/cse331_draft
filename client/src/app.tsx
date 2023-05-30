@@ -1,0 +1,201 @@
+import React, { Component } from "react";
+import { DraftCreator } from "./draft_creator";
+import { DraftJoiner } from "./draft_joiner";
+import { DraftViewer } from "./draft_viewer";
+
+type page = 'landing' | 'creator' | 'joiner' | 'viewer'
+
+export type DraftItem = {
+  item: string        // Name of item
+  index: number       // The index in which the item was drafted. Starts at 1
+  drafter: string     // The name of the drafter who drafted this item
+}
+
+function isDraftItem(val: any): val is DraftItem {
+  return typeof val === 'object' && 
+          val !== null && 
+          'item' in val && typeof val.item === 'string' &&
+          'index' in val && typeof val.index === 'number' &&
+          'drafter' in val && typeof val.drafter === 'string';
+} 
+
+interface AppState {
+  /** 
+   * RI: draftID = undefined && draftedItems = undefined && drafter = undefined if page != 'viewer'
+   *     draftID != undefined && draftedItems != undefined && drafter != undefined if page = 'viewer'
+   */
+  page: page;
+
+  turn?: string;
+  drafter?: string;
+  draftID?: number;
+  draftedItems?: DraftItem[];
+  undraftedItems?: string[];
+  isOver?: boolean;
+}
+
+
+export class App extends Component<{}, AppState> {
+
+  constructor(props: any) {
+    super(props);
+
+    this.state = {page: 'landing'};
+  }
+
+  swtichPage = (p: page) => {
+    this.setState({page: p});
+  } 
+
+  createDraft = (options: string[], drafters: string[], rounds: number, drafter: string) => {
+    const url = "/api/createDraft";
+    const body = {'items': options,'drafters': drafters,'rounds': rounds};
+    const type = {method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}};
+    console.log(type);
+
+    fetch(url, type).then((res) => {
+      if (res.status === 200) {
+        console.log(res);
+        return res.json();
+      } else {
+        this.handleClientError(res);
+        throw new Error('Client Error');
+      }
+    }).then((val) => {
+      if (typeof val === 'number') {
+        this.refreshDraft(drafter, val);
+      } else {
+        console.log(val);
+        throw new Error('Bad Data from Server');
+      }
+    }).catch((e: Error) => {
+      console.error(e.message);
+    })
+  }
+
+  // Updates state for all optional fields
+  // Then sets the page to viewer
+  refreshDraft = (drafter: string, draftID: number) => {
+    const url = "/api/getDraft?ID=" + draftID;
+    
+    fetch(url).then((res) => {
+      if (res.status === 200) {
+        return res.json();
+      } else {
+        this.handleClientError(res);
+        throw new Error('Client Error');
+      }
+    }).then((val) => {
+      // val should be {draftedItems: DraftItem[], undraftedItems: string[], turn: string, over: boolean}
+      const recievedDraftedItems = val.draftedItems;
+      const recievedUndraftedItems = val.undraftedItems;
+      const recievedTurn = val.turn;
+      const recievedOver = val.over;
+      if (Array.isArray(recievedDraftedItems) && Array.isArray(recievedUndraftedItems) &&
+          typeof recievedTurn === 'string' && typeof recievedOver === 'boolean') {
+        const draftedItems: DraftItem[] = [];
+        recievedDraftedItems.forEach((item) => {
+          if (isDraftItem(item)) {
+            draftedItems.push(item);
+          } else {
+            throw new Error('Bad Data from Server')
+          }
+        });
+        const undraftedItems: string[] = [];
+        recievedUndraftedItems.forEach((item) => {
+          if (typeof item === 'string') {
+            undraftedItems.push(item);
+          } else {
+            throw new Error('Bad Data from Server')
+          }
+        });
+        this.setState({drafter: drafter, draftID: draftID, draftedItems: draftedItems, undraftedItems: undraftedItems, 
+                       turn: recievedTurn, isOver: recievedOver, page: 'viewer'});
+      } else {
+        throw new Error('Bad Data from Server')
+      }
+    }).catch((e: Error) => {
+      console.error(e.message);
+    });
+  }
+
+  pickItem(item: string) {
+    // This should *hopefully* never be able to happen
+    if (!this.hasDraft()) {
+      throw new Error('No draft to pickItem for.')
+    }
+
+    const url = "/api/pickItem?" +
+                "ID=" + this.state.draftID +
+                "drafter=" + this.state.drafter;
+    const body = {'item': item};
+    const type = {method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}}
+    fetch(url, type).then((res) => {
+      if (res.status === 200) {
+        if (this.state.draftID === undefined || this.state.drafter === undefined) {
+          throw new Error('State changed. draftID or drafter is undefined');
+        }
+        this.refreshDraft(this.state.drafter ,this.state.draftID);
+        return;
+      } else {
+        this.handleClientError(res);
+        throw new Error('Client Error');
+      }
+    }).catch((e: Error) => {
+      console.error(e.message);
+    });
+  }
+
+  hasDraft = () => {
+    return  this.state.drafter !== undefined && this.state.draftID !== undefined &&
+            this.state.draftedItems !== undefined && this.state.turn !== undefined &&
+            this.state.isOver !== undefined && this.state.undraftedItems !== undefined
+  }
+
+  // Method for case that res.status != 200
+  handleClientError = (res: Response) => {
+    switch (res.status) {
+      case 400:
+      case 403:
+      case 409: // All these cases mean that I wrote some code wrong, user isn't at fault.
+        alert(res.statusText);
+        break;
+      case 404: // ID not found. This is user's fault so we alert them so.
+        alert('Draft with provided ID not found');
+        break;
+      default:
+        alert(`Something went wrong. \nStatus: ${res.status} ${res.statusText}`);
+    }
+  }
+
+  render = (): JSX.Element => {
+    switch (this.state.page) {
+      case 'landing':
+        return <div>
+          <h1> Landing Page! </h1>
+          <button type='button' onClick={() => {this.swtichPage('creator')}}>Create Draft</button>
+          <button type='button' onClick={() => {this.swtichPage('joiner')}}>Join Draft</button>
+        </div>
+      case 'creator':
+        return <div>
+          <DraftCreator createCallback={this.createDraft}/>
+        </div>;
+      case 'joiner':
+        return <div>
+          <DraftJoiner/>
+        </div>;
+      case 'viewer':
+        if (this.state.drafter === undefined || this.state.draftID === undefined ||
+            this.state.draftedItems === undefined || this.state.turn === undefined ||
+            this.state.isOver === undefined || this.state.undraftedItems === undefined) {
+              throw new Error("Rep Invariant Broken: " +
+              "draftID = undefined && draftedItems = undefined && drafter = undefined if page != 'viewer'")
+            }
+        return <div>
+          <DraftViewer drafter={this.state.drafter} draftID={this.state.draftID} turn={this.state.turn} over={this.state.isOver}
+                       draftedItems={this.state.draftedItems} options={this.state.undraftedItems} pickItem={this.pickItem}/>
+        </div>;
+    }
+  };
+
+}

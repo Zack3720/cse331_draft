@@ -1,0 +1,10 @@
+div.draftedItem {
+    display: table;
+    width: 500px;
+    table-layout: fixed;
+}
+
+div.draftedItem span {
+    display: table-cell;
+    text-align: center;
+}
