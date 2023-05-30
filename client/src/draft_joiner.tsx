@@ -3,6 +3,7 @@ import './draft_creator.css';
 
 interface draftJoinerProps {
     // will probably need something here
+    joinCallback: (drafter: string, id: number) => void;
   }
 
 interface draftJoinerState {
@@ -28,6 +29,14 @@ export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
       this.setState({drafterValue: evt.target.value});
     }
   }
+
+  joinDraft = () => {
+    if (this.state.drafterValue === '') {
+      alert('Drafter field cannot be empty');
+    } else {
+      this.props.joinCallback(this.state.drafterValue, this.state.IDValue);
+    }
+  }
   
   render = (): JSX.Element => {
     return <div>
@@ -40,7 +49,7 @@ export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
         <p className="inline">ID: </p>
         <input className="inline round" type='number' value={this.state.IDValue} onChange={this.onInputChange}></input>
       </div>
-      <button>Join</button>
+      <button onClick={this.joinDraft}>Join</button>
     </div>;
   };
 

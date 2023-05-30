@@ -1,7 +1,11 @@
 div.draftedItem {
     display: table;
-    width: 500px;
+    width: 300px;
     table-layout: fixed;
+}
+
+li {
+    list-style-type: none;
 }
 
 div.draftedItem span {

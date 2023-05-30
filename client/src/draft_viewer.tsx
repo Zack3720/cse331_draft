@@ -1,6 +1,8 @@
-import React, { ChangeEvent, Component } from "react";
+import React, { ChangeEvent, MouseEvent, Component } from "react";
 import { DraftItem } from "./app";
 import './draft_viewer.css';
+
+const REFRESH_INT = 2000;
 
 interface draftViewerProps {
     // will probably need something here
@@ -11,7 +13,8 @@ interface draftViewerProps {
     draftedItems: DraftItem[];
     over: boolean;
 
-    pickItem: (item: string) => void;
+    pickItemCallback: (item: string) => void;
+    refresh: () => void;
   }
 
 interface draftViewerState {
@@ -26,16 +29,31 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
     super(props);
 
     this.state = {selectValue: ''};
+    setTimeout(this.timedRefresh, REFRESH_INT);
+  }
+
+  timedRefresh = () => {
+    console.log('refreshing!');
+    this.props.refresh();
+    setTimeout(this.timedRefresh, REFRESH_INT);
   }
 
   onSelectChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     this.setState({selectValue: evt.target.value});
   }
+
+  onPickItem = (_: MouseEvent<HTMLButtonElement>) => {
+    if (this.state.selectValue === '') {
+      alert('Pick an item!');
+    } else {
+      this.props.pickItemCallback(this.state.selectValue);
+    }
+  }
   
   render = (): JSX.Element => {
     const itemsList: JSX.Element[] = []
-    this.props.draftedItems.forEach((item) => {
-      itemsList.push(<li key={item.item}>
+    this.props.draftedItems.forEach((item, index) => {
+      itemsList.push(<li key={index}>
         <div className="draftedItem">
           <span>{item.index}</span>
           <span>{item.item}</span>
@@ -54,10 +72,16 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
       <ul>{itemsList}</ul>
     </div>
 
-    if (this.props.drafter === this.props.turn) {
+    if (this.props.over) {
+      return <div>
+        {top}
+        <p>Draft is over!</p>
+      </div>;
+
+    } else if (this.props.drafter === this.props.turn) {
       const optionsList: JSX.Element[] = [<option value="">Select Item</option>]
-      this.props.options.forEach((val) => {
-        optionsList.push(<option value={val}>
+      this.props.options.forEach((val, index) => {
+        optionsList.push(<option value={val} key={index}>
           {val}
         </option>)
       });
@@ -66,19 +90,14 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
         {top}
         <p>Its your turn to pick.</p>
         <select value={this.state.selectValue} onChange={this.onSelectChange}>{optionsList}</select>
-      </div>;
-
-    } else if (this.props.over) {
-      return <div>
-        {top}
-        <p>Draft is over!</p>
+        <button onClick={this.onPickItem}>Pick Item</button>
       </div>;
 
     } else {
       return <div>
         {top}
         <p>Waiting on {this.props.turn} to pick... Gosh they take forever..</p>
-        <button>Refresh</button>
+        <button onClick={this.props.refresh}>Refresh</button>
       </div>;
 
     }

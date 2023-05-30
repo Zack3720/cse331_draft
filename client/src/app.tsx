@@ -48,6 +48,7 @@ export class App extends Component<{}, AppState> {
   } 
 
   createDraft = (options: string[], drafters: string[], rounds: number, drafter: string) => {
+    console.log(this);
     const url = "/api/createDraft";
     const body = {'items': options,'drafters': drafters,'rounds': rounds};
     const type = {method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}};
@@ -119,15 +120,18 @@ export class App extends Component<{}, AppState> {
     });
   }
 
-  pickItem(item: string) {
-    // This should *hopefully* never be able to happen
-    if (!this.hasDraft()) {
+  // Only call if this.state.page === 'viewer'
+  pickItem = (item: string) => {
+    console.log(this);
+    if (this.state.drafter === undefined || this.state.draftID === undefined ||
+      this.state.draftedItems === undefined || this.state.turn === undefined ||
+      this.state.isOver === undefined || this.state.undraftedItems === undefined) {
       throw new Error('No draft to pickItem for.')
     }
 
     const url = "/api/pickItem?" +
                 "ID=" + this.state.draftID +
-                "drafter=" + this.state.drafter;
+                "&drafter=" + this.state.drafter;
     const body = {'item': item};
     const type = {method: 'POST', body: JSON.stringify(body), headers: {'Content-Type': 'application/json'}}
     fetch(url, type).then((res) => {
@@ -146,19 +150,17 @@ export class App extends Component<{}, AppState> {
     });
   }
 
-  hasDraft = () => {
-    return  this.state.drafter !== undefined && this.state.draftID !== undefined &&
-            this.state.draftedItems !== undefined && this.state.turn !== undefined &&
-            this.state.isOver !== undefined && this.state.undraftedItems !== undefined
-  }
-
   // Method for case that res.status != 200
   handleClientError = (res: Response) => {
     switch (res.status) {
       case 400:
-      case 403:
       case 409: // All these cases mean that I wrote some code wrong, user isn't at fault.
         alert(res.statusText);
+        break;
+      case 403: // This means that it is not the drafter's turn. If this is the case they either
+                // clicked pick item multiple times or tried to send multiple pick requests at 
+                // the same time.
+        alert("Don't click so fast!");
         break;
       case 404: // ID not found. This is user's fault so we alert them so.
         alert('Draft with provided ID not found');
@@ -182,7 +184,7 @@ export class App extends Component<{}, AppState> {
         </div>;
       case 'joiner':
         return <div>
-          <DraftJoiner/>
+          <DraftJoiner joinCallback={this.refreshDraft}/>
         </div>;
       case 'viewer':
         if (this.state.drafter === undefined || this.state.draftID === undefined ||
@@ -191,9 +193,12 @@ export class App extends Component<{}, AppState> {
               throw new Error("Rep Invariant Broken: " +
               "draftID = undefined && draftedItems = undefined && drafter = undefined if page != 'viewer'")
             }
+        const drafter = this.state.drafter
+        const id = this.state.draftID
         return <div>
           <DraftViewer drafter={this.state.drafter} draftID={this.state.draftID} turn={this.state.turn} over={this.state.isOver}
-                       draftedItems={this.state.draftedItems} options={this.state.undraftedItems} pickItem={this.pickItem}/>
+                       draftedItems={this.state.draftedItems} options={this.state.undraftedItems} pickItemCallback={this.pickItem}
+                       refresh={() => {this.refreshDraft(drafter, id)}}/>
         </div>;
     }
   };
