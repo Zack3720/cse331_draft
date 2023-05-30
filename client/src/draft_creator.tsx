@@ -4,6 +4,7 @@ import './draft_creator.css';
 interface draftCreatorProps {
     // will probably need something here
     createCallback: (options: string[], drafters: string[], rounds: number, drafter: string) => void;
+    backCallback: () => void;
   }
 
 interface draftCreatorState {
@@ -89,6 +90,7 @@ export class DraftCreator extends Component<draftCreatorProps, draftCreatorState
         </div>
       </div>
       <button onClick={this.buildDraft}>Create Draft</button>
+      <button onClick={this.props.backCallback}>Back</button>
     </div>
   };
 

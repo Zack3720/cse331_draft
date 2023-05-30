@@ -15,11 +15,13 @@ interface draftViewerProps {
 
     pickItemCallback: (item: string) => void;
     refresh: () => void;
+    backCallback: () => void;
   }
 
 interface draftViewerState {
   // will probably need something here
   selectValue: string;
+  timer: NodeJS.Timeout;
 }
 
 
@@ -28,14 +30,14 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
   constructor(props: any) {
     super(props);
 
-    this.state = {selectValue: ''};
-    setTimeout(this.timedRefresh, REFRESH_INT);
+    
+    this.state = {selectValue: '', timer: setTimeout(this.timedRefresh, REFRESH_INT)};
   }
 
   timedRefresh = () => {
-    console.log('refreshing!');
     this.props.refresh();
-    setTimeout(this.timedRefresh, REFRESH_INT);
+    const timer = setTimeout(this.timedRefresh, REFRESH_INT);
+    this.setState({timer: timer});
   }
 
   onSelectChange = (evt: ChangeEvent<HTMLSelectElement>) => {
@@ -48,6 +50,11 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
     } else {
       this.props.pickItemCallback(this.state.selectValue);
     }
+  }
+
+  onBack = () => {
+    clearTimeout(this.state.timer);
+    this.props.backCallback();
   }
   
   render = (): JSX.Element => {
@@ -76,6 +83,7 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
       return <div>
         {top}
         <p>Draft is over!</p>
+        <button onClick={this.onBack}>Back</button>
       </div>;
 
     } else if (this.props.drafter === this.props.turn) {
@@ -91,6 +99,7 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
         <p>Its your turn to pick.</p>
         <select value={this.state.selectValue} onChange={this.onSelectChange}>{optionsList}</select>
         <button onClick={this.onPickItem}>Pick Item</button>
+        <button onClick={this.onBack}>Back</button>
       </div>;
 
     } else {
@@ -98,6 +107,7 @@ export class DraftViewer extends Component<draftViewerProps, draftViewerState> {
         {top}
         <p>Waiting on {this.props.turn} to pick... Gosh they take forever..</p>
         <button onClick={this.props.refresh}>Refresh</button>
+        <button onClick={this.onBack}>Back</button>
       </div>;
 
     }

@@ -4,6 +4,7 @@ import './draft_creator.css';
 interface draftJoinerProps {
     // will probably need something here
     joinCallback: (drafter: string, id: number) => void;
+    backCallback: () => void;
   }
 
 interface draftJoinerState {
@@ -50,6 +51,7 @@ export class DraftJoiner extends Component<draftJoinerProps, draftJoinerState> {
         <input className="inline round" type='number' value={this.state.IDValue} onChange={this.onInputChange}></input>
       </div>
       <button onClick={this.joinDraft}>Join</button>
+      <button onClick={this.props.backCallback}>Back</button>
     </div>;
   };
 

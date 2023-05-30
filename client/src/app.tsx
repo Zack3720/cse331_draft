@@ -21,8 +21,8 @@ function isDraftItem(val: any): val is DraftItem {
 
 interface AppState {
   /** 
-   * RI: draftID = undefined && draftedItems = undefined && drafter = undefined if page != 'viewer'
-   *     draftID != undefined && draftedItems != undefined && drafter != undefined if page = 'viewer'
+   * RI: turn, drafter, draftID, draftedItems, undraftedItems, isOver == undefined if page != 'viewer'
+   *     turn, drafter, draftID, draftedItems, undraftedItems, isOver != undefined if page = 'viewer'
    */
   page: page;
 
@@ -43,10 +43,12 @@ export class App extends Component<{}, AppState> {
     this.state = {page: 'landing'};
   }
 
+  // Switches page to given page.
   swtichPage = (p: page) => {
     this.setState({page: p});
   } 
 
+  // creates a draft with the given info.
   createDraft = (options: string[], drafters: string[], rounds: number, drafter: string) => {
     console.log(this);
     const url = "/api/createDraft";
@@ -151,6 +153,7 @@ export class App extends Component<{}, AppState> {
   }
 
   // Method for case that res.status != 200
+  // Alerts the user with releavant info
   handleClientError = (res: Response) => {
     switch (res.status) {
       case 400:
@@ -170,6 +173,7 @@ export class App extends Component<{}, AppState> {
     }
   }
 
+  // renders app
   render = (): JSX.Element => {
     switch (this.state.page) {
       case 'landing':
@@ -180,11 +184,11 @@ export class App extends Component<{}, AppState> {
         </div>
       case 'creator':
         return <div>
-          <DraftCreator createCallback={this.createDraft}/>
+          <DraftCreator createCallback={this.createDraft} backCallback={() => {this.swtichPage('landing')}}/>
         </div>;
       case 'joiner':
         return <div>
-          <DraftJoiner joinCallback={this.refreshDraft}/>
+          <DraftJoiner joinCallback={this.refreshDraft} backCallback={() => {this.swtichPage('landing')}}/>
         </div>;
       case 'viewer':
         if (this.state.drafter === undefined || this.state.draftID === undefined ||
@@ -198,7 +202,7 @@ export class App extends Component<{}, AppState> {
         return <div>
           <DraftViewer drafter={this.state.drafter} draftID={this.state.draftID} turn={this.state.turn} over={this.state.isOver}
                        draftedItems={this.state.draftedItems} options={this.state.undraftedItems} pickItemCallback={this.pickItem}
-                       refresh={() => {this.refreshDraft(drafter, id)}}/>
+                       refresh={() => {this.refreshDraft(drafter, id)}} backCallback={() => {this.swtichPage('landing')}}/>
         </div>;
     }
   };
